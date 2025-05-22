@@ -1,3 +1,6 @@
 Flask
 python-dotenv
 litellm
+streamlit
+watchdog
+gradio

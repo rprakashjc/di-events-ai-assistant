@@ -23,6 +23,12 @@ This project is a minimal Flask web application that exposes a POST endpoint at 
    python app.py
    ```
 
+5. (Optional) Start the Gradio UI:
+   ```bash
+   python gradio_app.py
+   ```
+   This will launch a web-based chat interface at http://localhost:7860 where you can interact with the backend using natural language prompts.
+
 ## Usage
 Send a POST request to:
 ```
@@ -42,4 +48,6 @@ Show me all admin logins from US for last 2 days
 Show me all admin logins from IN for last 2 days
 find any admin update event happening in last 2 days
 show details about softwares added in last week
+Show all login events in last 2 weeks in a tabular format
+Show all login events in last 2 weeks with all details in a tabular format
 ```
