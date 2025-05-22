@@ -6,11 +6,24 @@ from litellm import completion, exceptions
 import json
 import datetime
 from event_schema_registry import get_event_schema
-from event_types import event_types_list
+from event_types import event_types_list, EVENT_TYPE_TO_SERVICE_MAP
 from system_prompt import system_prompt_content
 from llm_api_tools import api_tools, get_event_schema_function_declaration
 
 load_dotenv()
+
+# --- Load config at startup ---
+LITELLM_MODEL_NAME = os.getenv("LITELLM_MODEL_NAME", "gemini-2.0-flash")
+LITELLM_API_BASE = os.getenv("LITELLM_API_BASE", "")
+LITELLM_API_KEY = os.getenv("LITELLM_API_KEY", "")
+JC_API_BASE_URL = os.getenv("JC_API_BASE_URL", "")
+DI_EVENTS_API_ENDPOINT = os.getenv("DI_EVENTS_API_ENDPOINT", "")
+SI_DI_EVENTS_API_ENDPOINT = os.getenv("SI_DI_EVENTS_API_ENDPOINT", "")
+JC_API_KEY_VALUE = os.getenv("JC_API_KEY", "")
+
+# Precompute full API URLs if needed
+LITELLM_FULL_API_URL = LITELLM_API_BASE + LITELLM_MODEL_NAME
+JC_DI_EVENTS_API_URL = JC_API_BASE_URL + DI_EVENTS_API_ENDPOINT
 
 app = Flask(__name__)
 
@@ -55,18 +68,54 @@ def execute_tool_call(tool_call):
         # Extract the arguments from the tool call
         arguments = function_args  # Already a dict, no need to json.loads
         
+        # 1. Check if 'service' was explicitly provided by the LLM (from user query)
+        user_provided_service = arguments.get("service")
+
+        if user_provided_service:
+            # If the user (via LLM) provided a service, use it directly.
+            # Ensure it's a list for consistency with the API schema.
+            if not isinstance(user_provided_service, list):
+                arguments["service"] = [user_provided_service]
+                print(f"Using user-provided service: {arguments['service']}")
+            else:
+                # 2. If no service was provided, try to infer from event_type
+                inferred_service = ["all"]
+                if "search_term" in arguments and arguments["search_term"]:
+                    search_term_obj = arguments["search_term"]
+                    for logical_op in ["and", "or", "not"]:
+                        if logical_op in search_term_obj:
+                            for filter_obj in search_term_obj[logical_op]:
+                                if "event_type" in filter_obj:
+                                    event_types_in_query = filter_obj["event_type"]
+                                    if event_types_in_query:
+                                        # Get service for the first event type found
+                                        first_event_type = event_types_in_query[0]
+                                        if first_event_type in EVENT_TYPE_TO_SERVICE_MAP:
+                                            inferred_service = [EVENT_TYPE_TO_SERVICE_MAP[first_event_type]]
+                                            print(f"Inferred service: {inferred_service[0]} for event type: {first_event_type}")
+                                            break
+                            if inferred_service != ["all"]:
+                                # If service was inferred, break outer loop
+                                break
+                if inferred_service != ["all"] and arguments.get("service") != inferred_service:
+                    arguments["service"] = inferred_service
+                    print(f"Overriding service to: {arguments['service']}")
+                elif "service" not in arguments: # If LLM didn't provide service, use default
+                    arguments["service"] = inferred_service
+                    print(f"Setting default service to: {arguments['service']}")
+
         print(f"\n--- Executing query_events with payload: {json.dumps(function_args, indent=2)} ---")
 
         # Call your API here with the arguments
         # For demonstration, we will just return a mock response
         try:
             api_response = requests.post(
-            os.getenv('JC_API_BASE_URL') + os.getenv('DI_EVENTS_API_ENDPOINT'),
-            json=arguments,
-            headers={
-                "Content-Type": "application/json",
-                "x-api-key": os.getenv('JC_API_KEY')
-            }
+                JC_DI_EVENTS_API_URL,
+                json=arguments,
+                headers={
+                    "Content-Type": "application/json",
+                    "x-api-key": JC_API_KEY_VALUE
+                }
             )
             api_response.raise_for_status()  # Raise an error for bad responses
             response_data = api_response.json()
@@ -119,12 +168,15 @@ def ask_custom_llm(prompt):
     Assumes LLM config is set via environment variables (see litellm docs).
     """
     print(f"Prompt: {prompt}")
-    print(f"API URL: {os.getenv('LITELLM_API_BASE')}{os.getenv('LITELLM_MODEL_NAME')}")
-    model = "hosted_vllm/"+os.getenv("LITELLM_MODEL_NAME", "gemini-proxy")
+
+    model = "hosted_vllm/" + LITELLM_MODEL_NAME
     print(f"Model: {model}")
 
-    api_base = os.getenv("LITELLM_API_BASE")+os.getenv("LITELLM_MODEL_NAME")
+    api_base = LITELLM_FULL_API_URL    
     print(f"API Base: {api_base}")
+
+    if not api_base.startswith("http://") and not api_base.startswith("https://"):
+        raise ValueError(f"api_base is missing protocol: {api_base}")
 
     messages = [
         {
@@ -139,7 +191,7 @@ def ask_custom_llm(prompt):
         response = completion(
             model=model,
             api_base=api_base,
-            api_key=os.getenv("LITELLM_API_KEY"),
+            api_key=LITELLM_API_KEY,
             custom_llm_provider="gemini",
             messages=messages,
             tools=api_tools,
@@ -169,7 +221,7 @@ def ask_custom_llm(prompt):
             response = completion(
                 model=model,
                 api_base=api_base,
-                api_key=os.getenv("LITELLM_API_KEY"),
+                api_key=LITELLM_API_KEY,
                 custom_llm_provider="gemini",
                 messages=messages,
                 tools=api_tools,
@@ -198,7 +250,7 @@ def ask_custom_llm(prompt):
             final_response = completion(
                 model=model,
                 api_base=api_base,
-                api_key=os.getenv("LITELLM_API_KEY"),
+                api_key=LITELLM_API_KEY,
                 custom_llm_provider="gemini",
                 messages=messages,
                 tools=api_tools, # Still pass tools, but tool_choice overrides
@@ -225,7 +277,7 @@ def ask_custom_llm(prompt):
 
 # --- Run interactions with dynamic schema awareness ---
 # Example usage
-#ask_custom_llm("Show me failed admin logins for user ranjyotiprakashsingh@gmail.com for last 15 days.")
+#ask_custom_llm("Show me failed admin logins for user someuser@gmail.com for last 15 days.")
 #ask_custom_llm("Show me all admin logins from US for last 2 days.")
 
 if __name__ == '__main__':

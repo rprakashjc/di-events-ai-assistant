@@ -34,3 +34,12 @@ Example:
 ```
 curl -X POST http://localhost:5000/question   -H "Content-Type: application/json"   -d '{"prompt": "find all user login attempts in the past week"}'
 ```
+
+Example Prompts:
+```
+Show me failed admin logins for user someuser@gmail.com for last 15 days
+Show me all admin logins from US for last 2 days
+Show me all admin logins from IN for last 2 days
+find any admin update event happening in last 2 days
+show details about softwares added in last week
+```
