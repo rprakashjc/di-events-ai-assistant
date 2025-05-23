@@ -82,7 +82,8 @@ query_events_function_declaration = {
                 "search_term": {
                     "type": "object",
                     "description": (
-                        "A structured JSON object for filtering events. Only one of 'and', 'or', or 'not' is allowed as the top-level key. "
+                        "A structured JSON object for filtering events."
+                        "Only one of 'and', 'or', or 'not' is allowed as the top-level key. "
                         "Each key maps to an array of filter objects. Each filter object must contain a single key-value pair where: "
                         "- The key is a precise event field path (e.g., 'initiated_by.email', 'geoip.country_code', 'success', 'useragent.os_name'). "
                         "- The value is an array of strings or booleans that the field must match. Boolean values should be represented as 'true' or 'false' strings. "
@@ -100,8 +101,10 @@ query_events_function_declaration = {
                         "   {\n  \"or\": [\n    {\"geoip.country_code\": [\"US\"]},\n    {\"geoip.country_code\": [\"CA\"]}\n  ]\n}\n"
                         "6. Admin logins from Mac OS:\n"
                         "   {\n  \"and\": [\n    {\"event_type\": [\"admin_login_attempt\"]},\n    {\"useragent.os_name\": [\"Mac OS X\"]}\n  ]\n}\n"
-                        # "Invalid example (do not do this):\n"
-                        # "{\n  \"and1\": [\n    {\"username\": [\"root\"]}\n  ]\n}\n"
+                        "7. Failed RADIUS login attempts for user 'paul' with an 'and' with nested or:\n"
+                        "   {\n  \"service\": [\"radius\"],\n  \"start_time\": \"2020-01-01T14:00:00Z\",\n  \"search_term\": {\n    \"and\": [\n      {\"success\": [\"false\"]},\n      {\"or\": [\n        {\"initiated_by.username\": [\"paul\"]},\n        {\"username\": [\"paul\"]}\n      ]}\n    ]\n  }\n}\n"
+                        "8. Query for admin or user login attempts (using 'or' on event_type):\n"
+                        "   {\n  \"or\": [\n    {\"event_type\": [\"admin_login_attempt\"]},\n    {\"event_type\": [\"user_login_attempt\"]}\n  ]\n}\n"
                     ),
                     
                     "properties": {
@@ -220,5 +223,5 @@ get_current_date_function_declaration = {
 api_tools = [
     query_events_function_declaration,
     get_event_schema_function_declaration,
-    get_current_date_function_declaration
+    get_current_date_function_declaration,
 ]

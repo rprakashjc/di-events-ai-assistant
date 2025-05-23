@@ -18,7 +18,8 @@ iface = gr.ChatInterface(
     type="messages",
     title="JumpCloud Directory Insights Event Assistant",
     description="Ask questions about JumpCloud Directory Insights events.",
-    theme="ocean",
+    theme="light",
+    autofocus=False,
     # examples=[
     #     ["What are the recent admin login attempts?", "What are the recent user signups?", "Show me all software added in the last 7 days."],
     #     ["List all failed login attempts in the last 24 hours.", "What are the recent password reset requests?"],

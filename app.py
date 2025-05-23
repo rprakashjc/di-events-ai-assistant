@@ -9,6 +9,7 @@ from event_schema_registry import get_event_schema
 from event_types import event_types_list, EVENT_TYPE_TO_SERVICE_MAP
 from system_prompt import system_prompt_content
 from llm_api_tools import api_tools, get_event_schema_function_declaration
+from collections import defaultdict
 
 load_dotenv()
 
@@ -107,7 +108,6 @@ def execute_tool_call(tool_call):
         print(f"\n--- Executing query_events with payload: {json.dumps(function_args, indent=2)} ---")
 
         # Call your API here with the arguments
-        # For demonstration, we will just return a mock response
         try:
             api_response = requests.post(
                 JC_DI_EVENTS_API_URL,
@@ -158,7 +158,6 @@ def execute_tool_call(tool_call):
         # Return the current date in RFC3339 format
         current_date = datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
         return {"current_date": current_date}
-
     else:
         raise ValueError(f"Unknown function name: {tool_call.function.name}")
 
@@ -243,32 +242,33 @@ def ask_custom_llm(prompt):
         else:
             print("No final text content generated.")
 
-        if messages and messages[-1]["role"] == "tool":
-            print("\n--- Finalizing response with Gemini (Summarization) ---")
-            # Make a final call to Gemini to summarize the results.
-            # We explicitly set tool_choice to "none" to ensure it generates text.
-            final_response = completion(
-                model=model,
-                api_base=api_base,
-                api_key=LITELLM_API_KEY,
-                custom_llm_provider="gemini",
-                messages=messages,
-                tools=api_tools, # Still pass tools, but tool_choice overrides
-                tool_choice="none" # Crucial: Force text generation, no more tool calls
-            )
+        # if messages and messages[-1]["role"] == "tool":
+        #     print("\n--- Finalizing response with Gemini (Summarization) ---")
+        #     # Make a final call to Gemini to summarize the results.
+        #     # We explicitly set tool_choice to "none" to ensure it generates text.
+        #     final_response = completion(
+        #         model=model,
+        #         api_base=api_base,
+        #         api_key=LITELLM_API_KEY,
+        #         custom_llm_provider="gemini",
+        #         messages=messages,
+        #         tools=api_tools, # Still pass tools, but tool_choice overrides
+        #         tool_choice="none" # Crucial: Force text generation, no more tool calls
+        #     )
             
-            if final_response.choices and final_response.choices[0].message.content:
-                print("\n--- Gemini's Summary of API Results ---")
-                print(final_response.choices[0].message.content)
-            else:
-                print("Gemini did not provide a final summary.")
-        elif response.choices and response.choices[0].message.content:
-            # This handles cases where no tool call was needed, and Gemini gave a direct answer
-            # (e.g., "What is the capital of France?")
-            print("\n--- Gemini's Direct Response (No API Call) ---")
-            print(response.choices[0].message.content)
-        else:
-            print("No content generated or an error occurred from Gemini (empty final response).")
+        #     if final_response.choices and final_response.choices[0].message.content:
+        #         print("\n--- Gemini's Summary of API Results ---")
+        #         print(final_response.choices[0].message.content)
+        #         return final_response.choices[0].message.content
+        #     else:
+        #         print("Gemini did not provide a final summary.")
+        # elif response.choices and response.choices[0].message.content:
+        #     # This handles cases where no tool call was needed, and Gemini gave a direct answer
+        #     # (e.g., "What is the capital of France?")
+        #     print("\n--- Gemini's Direct Response (No API Call) ---")
+        #     print(response.choices[0].message.content)
+        # else:
+        #     print("No content generated or an error occurred from Gemini (empty final response).")
         return response.choices[0].message.content
     except exceptions.APIError as e:
         print(f"LiteLLM API error: {e}")
