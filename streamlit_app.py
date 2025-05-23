@@ -46,7 +46,7 @@ body {
     background: linear-gradient(135deg, #e0e7ff 0%, #f9fafb 100%);
 }
 .chat-container {
-    height: 400px;
+    height: 300px;
     overflow-y: auto;
     border: 1px solid #b6b6b6;
     padding: 10px;
@@ -81,12 +81,12 @@ body {
     box-shadow: 0 1px 4px rgba(52,168,83,0.07);
 }
 </style>
-<div class='chat-container'>
+<div>
 """
 for role, msg in st.session_state['chat_history']:
     if role == "user":
-        chat_html += f"<div class='user-msg'><b>You:</b> {msg}</div>"
+        chat_html += f"<div class='user-msg'>{msg}</div>"
     else:
-        chat_html += f"<div class='bot-msg'><b>Bot:</b> {msg}</div>"
+        chat_html += f"<div class='bot-msg'>{msg}</div>"
 chat_html += "</div>"
 st.markdown(chat_html, unsafe_allow_html=True)

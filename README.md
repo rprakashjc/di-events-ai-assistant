@@ -23,7 +23,13 @@ This project is a minimal Flask web application that exposes a POST endpoint at 
    python app.py
    ```
 
-5. (Optional) Start the Gradio UI:
+5. (Optional) Start the Streamlit UI:
+   ```bash
+   streamlit run streamlit_app.py
+   ```
+   This will launch a modern chat interface at http://localhost:8501 where you can interact with the backend using natural language prompts.
+
+6. (Optional) Start the Gradio UI:
    ```bash
    python gradio_app.py
    ```
