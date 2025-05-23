@@ -7,13 +7,20 @@ import requests
 st.sidebar.title("JumpCloud Directory Insights Assistant")
 st.sidebar.markdown("""
 Interact with the JumpCloud Directory Insights Event Assistant. Ask questions about events, logins, software, and more!
-- **Ask about recent events:** "What are the recent admin login attempts?"
-- **Inquire about specific actions:** "show details about softwares added in last week"
-- **Request event summaries:** "List all failed login attempts in the last 24 hours."
-- **Get details on specific events:** "find any admin update event happening in last 2 days"
-- **Explore user activities:** "List all admin lockouts in the last 15 days."
-- **Get help with event types:** "What are the available event types?"
-- **Get help with event schemas:** "What is the schema for user login attempts?"
+- **Ask about recent events:** 
+    - What are the recent admin login attempts?
+- **Inquire about specific actions:**
+    - show details about softwares added in last week
+    - Show me all admin logins from IN for last 2 days
+    - find any admin update event happening in last 2 days
+- **Request event summaries:**
+    - List all failed login attempts in the last 24 hours.
+- **Get details on specific events:**
+    - find any admin update event happening in last 2 days
+- **Explore user activities:**
+    - List all admin lockouts in the last 15 days.
+- **Get help with event schemas:**
+    - "What is the schema for user login attempts?"
 """)
 
 # Main chat UI with scrollable chat history

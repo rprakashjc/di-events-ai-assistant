@@ -36,18 +36,39 @@ This project is a minimal Flask web application that exposes a POST endpoint at 
    This will launch a web-based chat interface at http://localhost:7860 where you can interact with the backend using natural language prompts.
 
 ## Usage
-Send a POST request to:
-```
-http://localhost:5000/endpoint
-```
-with a JSON payload containing your event query parameters. The app will respond with the LLM-processed event query results in JSON format.
 
-Example:
-```
-curl -X POST http://localhost:5000/question   -H "Content-Type: application/json"   -d '{"prompt": "find all user login attempts in the past week"}'
+You can interact with the backend in three ways:
+
+### 1. Programmatically (via HTTP POST)
+Send a POST request to the `/question` endpoint:
+
+```bash
+curl -X POST http://localhost:5000/question \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "find all user login attempts in the past week"}'
 ```
 
-Example Prompts:
+### 2. Streamlit Chat UI
+Start the Streamlit UI:
+
+```bash
+streamlit run streamlit_app.py
+```
+
+- Access at: [http://localhost:8501](http://localhost:8501)
+- Modern, chat-style interface with sidebar instructions and scrollable chat history.
+
+### 3. Gradio Chat UI
+Start the Gradio UI:
+
+```bash
+python gradio_app.py
+```
+
+- Access at: [http://localhost:7860](http://localhost:7860)
+- Web-based chat interface for natural language queries.
+
+#### Example Prompts
 ```
 Show me failed admin logins for user someuser@gmail.com for last 15 days
 Show me all admin logins from US for last 2 days
