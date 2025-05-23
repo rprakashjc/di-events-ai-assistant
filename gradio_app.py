@@ -13,21 +13,40 @@ def chat_with_backend(message, history):
         llm_response = f"Request failed: {e}"
     return llm_response
 
-iface = gr.ChatInterface(
-    fn=chat_with_backend,
-    type="messages",
-    title="JumpCloud Directory Insights Event Assistant",
-    description="Ask questions about JumpCloud Directory Insights events.",
-    theme="light",
-    autofocus=False,
-    # examples=[
-    #     ["What are the recent admin login attempts?", "What are the recent user signups?", "Show me all software added in the last 7 days."],
-    #     ["List all failed login attempts in the last 24 hours.", "What are the recent password reset requests?"],
-    #     ["List all admin lockouts in the last month."]
-    # ],
-    # cache_examples=True,
-    #textbox=gr.Textbox(label="Ask a question:"),
-    textbox=gr.Textbox(placeholder="Ask me to about DI events", container=False, scale=7),
-)
+with gr.Blocks(theme="ocean") as demo:
+    gr.Markdown("""
+    # JumpCloud Directory Insights Event Assistant
+    """)
+    with gr.Row():
+        with gr.Column(scale=1):
+            gr.Markdown("""
+            ## Instructions
+            - Ask questions about JumpCloud Directory Insights events.
+            - Example prompts:
+                - What are the recent admin login attempts?
+                - Show me all admin logins from IN for last 2 days
+                - List all failed login attempts in the last 24 hours.
+                - show details about softwares added in last week
+                - What are the recent password reset requests?
+                - List all admin lockouts in the last month.
+            """)
+        with gr.Column(scale=3):
+            chatbot = gr.Chatbot()
+            msg = gr.Textbox(placeholder="Ask me about DI events", container=False, scale=7)
+            clear = gr.Button("Clear")
 
-iface.launch()
+    def respond(message, history):
+        response = chat_with_backend(message, history)
+        # Gradio expects the chatbot history as a list of [user, bot] pairs
+        if history is None:
+            history = []
+        history = history + [[message, response]]
+        return history
+
+    def clear_chat():
+        return [], ""
+
+    msg.submit(respond, [msg, chatbot], [chatbot, msg])
+    clear.click(clear_chat, outputs=[chatbot, msg])
+
+demo.launch()

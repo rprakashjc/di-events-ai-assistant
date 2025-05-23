@@ -219,9 +219,27 @@ get_current_date_function_declaration = {
     }
 }
 
+# --- Tool 4: get_event_types (Utility for LLM) ---
+get_event_types_function_declaration = {
+    "type": "function",
+    "function": {
+        "name": "get_event_types",
+        "description": (
+            "Provides a list of all available event types. "
+            "Use this to identify the event type(s) or when the user asks for a list of event types or if they mention an unknown event type."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
+    }
+}
+
 # The tools list passed to litellm.completion
 api_tools = [
     query_events_function_declaration,
     get_event_schema_function_declaration,
     get_current_date_function_declaration,
+    get_event_types_function_declaration
 ]
